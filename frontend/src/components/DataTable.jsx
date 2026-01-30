@@ -6,14 +6,16 @@ const DataTable = ({ columns, data }) => {
 
   const handleSort = (key) => {
     let direction = "asc";
+
     if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
       direction = "desc";
     }
+
     setSortConfig({ key, direction });
   };
 
-  const filteredData = data.filter((item) =>
-    Object.values(item)
+  const filteredData = data.filter((row) =>
+    Object.values(row)
       .join(" ")
       .toLowerCase()
       .includes(search.toLowerCase())
@@ -38,10 +40,10 @@ const DataTable = ({ columns, data }) => {
         placeholder="Search..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: "10px", padding: "5px" }}
+        style={{ marginBottom: "10px" }}
       />
 
-      <table border="1" width="100%">
+      <table border="1" width="100%" cellPadding="8">
         <thead>
           <tr>
             {columns.map((col) => (
@@ -57,8 +59,8 @@ const DataTable = ({ columns, data }) => {
         </thead>
 
         <tbody>
-          {sortedData.map((row, index) => (
-            <tr key={index}>
+          {sortedData.map((row) => (
+            <tr key={row.id}>
               {columns.map((col) => (
                 <td key={col.accessor}>{row[col.accessor]}</td>
               ))}

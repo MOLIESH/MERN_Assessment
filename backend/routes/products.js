@@ -1,52 +1,106 @@
 const express = require("express");
+const router = express.Router();
 const db = require("../db");
 
-const router = express.Router();
 
-// GET all products (excluding soft deleted)
 router.get("/", (req, res) => {
   const query = "SELECT * FROM products WHERE deleted_at IS NULL";
+
   db.query(query, (err, results) => {
-    if (err) return res.status(500).json(err);
+    if (err) {
+      console.error("FETCH ERROR:", err);
+      return res.status(500).json({ message: "Failed to fetch products" });
+    }
     res.json(results);
   });
 });
 
-// POST add product
+
+
 router.post("/", (req, res) => {
   const { name, price } = req.body;
-  const query = "INSERT INTO products (name, price) VALUES (?, ?)";
-  db.query(query, [name, price], (err, result) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: "Product added", id: result.insertId });
+
+  console.log("ADD PRODUCT BODY:", req.body);
+
+  if (!name || price === undefined) {
+    return res
+      .status(400)
+      .json({ message: "Product name and price are required" });
+  }
+
+  const query =
+    "INSERT INTO products (name, price, deleted_at) VALUES (?, ?, NULL)";
+
+  db.query(query, [name, Number(price)], (err, result) => {
+    if (err) {
+      console.error("INSERT ERROR:", err);
+      return res.status(500).json({
+        message: "Failed to add product",
+        error: err,
+      });
+    }
+
+    res.status(201).json({
+      message: "Product added successfully",
+      id: result.insertId,
+    });
   });
 });
 
-// PUT update product
+
+
 router.put("/:id", (req, res) => {
   const { name, price } = req.body;
-  const query = "UPDATE products SET name=?, price=? WHERE id=?";
-  db.query(query, [name, price, req.params.id], (err) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: "Product updated" });
+  const { id } = req.params;
+
+  if (!name || price === undefined) {
+    return res
+      .status(400)
+      .json({ message: "Product name and price are required" });
+  }
+
+  const query = "UPDATE products SET name = ?, price = ? WHERE id = ?";
+
+  db.query(query, [name, Number(price), id], (err) => {
+    if (err) {
+      console.error("UPDATE ERROR:", err);
+      return res.status(500).json({ message: "Failed to update product" });
+    }
+
+    res.json({ message: "Product updated successfully" });
   });
 });
 
-// DELETE soft delete
+
 router.delete("/:id", (req, res) => {
-  const query = "UPDATE products SET deleted_at = NOW() WHERE id=?";
-  db.query(query, [req.params.id], (err) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: "Product soft deleted" });
+  const { id } = req.params;
+
+  const query = "UPDATE products SET deleted_at = NOW() WHERE id = ?";
+
+  db.query(query, [id], (err) => {
+    if (err) {
+      console.error("DELETE ERROR:", err);
+      return res.status(500).json({ message: "Failed to delete product" });
+    }
+
+    res.json({ message: "Product soft deleted successfully" });
   });
 });
 
-// RESTORE product
+
+
 router.put("/restore/:id", (req, res) => {
-  const query = "UPDATE products SET deleted_at = NULL WHERE id=?";
-  db.query(query, [req.params.id], (err) => {
-    if (err) return res.status(500).json(err);
-    res.json({ message: "Product restored" });
+  const { id } = req.params;
+
+  const query = "UPDATE products SET deleted_at = NULL WHERE id = ?";
+
+  db.query(query, [id], (err) => {
+    if (err) {
+      console.error("RESTORE ERROR:", err);
+      return res.status(500).json({ message: "Failed to restore product" });
+    }
+
+    res.json({ message: "Product restored successfully" });
   });
 });
 

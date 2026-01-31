@@ -23,5 +23,3 @@
 ## Features
 - Reusable sortable & filterable table
 - REST API with soft delete
-- Restore protection after 30 days
-
